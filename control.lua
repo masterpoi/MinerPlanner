@@ -93,16 +93,6 @@ function remote_deselect_units(player)
 	remote_hide_gui(player)
 	if not global.player_selected_units then
 		global.player_selected_units = {}
-	-- elseif global.player_selected_units[player.index] then 
-	-- 	local selected_units = global.player_selected_units[player.index]
-	-- 	for unit_id, selected_unit in pairs(selected_units) do
-	-- 		if selected_unit.selection and selected_unit.selection.valid then
-	-- 			selected_unit.selection.destroy()
-	-- 			selected_unit.selection = nil
-	-- 		end	
-	-- 		selected_units[unit_id] = nil
-	-- 	end
-	-- 	global.player_selected_units[player.index] = nil
     end
 end
 
@@ -112,8 +102,7 @@ end
 function is_item_researched(player,item)
     for _, recipe in pairs(player.force.recipes) do
         for _2, product in pairs(recipe.products) do        
-            if (product.name == item.name) then             
-                --game.print("found matching recipe for item " .. item.name .. ":" .. recipe.name)
+            if (product.name == item.name) then                             
                 return recipe.enabled
             end            
         end
@@ -124,12 +113,6 @@ function is_entity_researched(player, entity)
     for key, proto in pairs(entity.items_to_place_this ) do
         if is_item_researched(player , proto) then return true end
     end
-    -- for _, proto in pairs(game.item_prototypes) do
-    --     if (proto.place_result == entity) then
-    --         return is_item_researched(player, proto)
-            
-    --     end
-    -- end
     return false
 end
 
