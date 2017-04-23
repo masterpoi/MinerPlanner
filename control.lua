@@ -33,14 +33,16 @@ function remote_on_player_selected_area(event, alt)
         global.player_selected_units[player.index] = data
         
         
-		
+		local item_found = false
         for _, entity in pairs(select_entities) do
-
-            if not data[entity.name] then
-                data[entity.name] = {amount = 0, entities={}}
+            if not string.match(entity.name, "oil") and not string.match(entity.name, "water") then --skip oil and water patches
+                item_found = true
+                if not data[entity.name] then
+                    data[entity.name] = {amount = 0, entities={}}
+                end
+                data[entity.name].amount = data[entity.name].amount  + entity.amount
+                table.insert(data[entity.name].entities,entity)
             end
-            data[entity.name].amount = data[entity.name].amount  + entity.amount
-            table.insert(data[entity.name].entities,entity)
 	    
 		end
 
@@ -57,7 +59,7 @@ function remote_on_player_selected_area(event, alt)
 
         
 
-		if #select_entities > 0 then
+		if item_found then
 			remote_show_gui(player)
 		end
 	end
