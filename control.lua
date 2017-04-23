@@ -1,4 +1,4 @@
-black_list = { "extractor", "factory-port-maker", "splitter", "loader", "pumpjack", "water"}
+black_list = { "extractor", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water"}
 buttons = {}
 mode_buttons = {}
 entity_selections = {
@@ -27,7 +27,7 @@ function remote_on_player_selected_area(event, alt)
 	    area.left_top.x = area.left_top.x - 0.01
 	    area.left_top.y = area.left_top.y - 0.01
 	    area.right_bottom.x = area.right_bottom.x + 0.01
-		area.right_bottom.y = area.right_bottom.y + 0.01
+		area.right_bottom.y = area.right_bottom.y + 0.01 
 		local select_entities = player.surface.find_entities_filtered{
 			area = area,
 			type = "resource",
@@ -79,7 +79,7 @@ end
 function remote_on_player_cursor_stack_changed(event)
 	local player = game.players[event.player_index]
 	if player.cursor_stack and player.cursor_stack.valid and player.cursor_stack.valid_for_read then
-		if player.cursor_stack.name == "unit-remote-control" then
+		if player.cursor_stack.name == "remote-control" then
 			--
 		else
 			remote_deselect_units(player)
