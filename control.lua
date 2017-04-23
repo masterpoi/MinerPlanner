@@ -1,3 +1,4 @@
+black_list = { "extractor", "factory-port-maker", "splitter", "loader", "pumpjack", "water"}
 buttons = {}
 mode_buttons = {}
 entity_selections = {
@@ -179,11 +180,22 @@ function show_picker(key, player, items)
 
     end
 end
+        
+function is_blacklisted(key)     
+    for i=1, #black_list do
+        local filter = black_list[i]
+        if string.match(key, filter) then
+             return true
+        end
+    end
+
+    return false
+end
 function show_belt_picker(player)
         local items = {}
         for key, proto in pairs(game.entity_prototypes)  do
-            if proto.belt_speed and not proto.underground_belt_distance and not string.match(key, "splitter") and not string.match(key,"loader") then
-                if not research_only or is_entity_researched(player, proto) then
+            if proto.belt_speed and not proto.underground_belt_distance  then
+                if not is_blacklisted(key) and (not research_only or is_entity_researched(player, proto)) then
                     table.insert(items, key)
                 end
             end
@@ -192,10 +204,12 @@ function show_belt_picker(player)
         show_picker("belt", player, items)
 end
 function show_miner_picker(player)
+
         local items = {}
         for key, proto in pairs(game.entity_prototypes)  do
-            if  proto.mining_drill_radius and not string.match(key, "pumpjack") and not string.match(key, "water")  then
-                if not research_only or  is_entity_researched(player, proto) then
+            if  proto.mining_drill_radius  then
+       
+                if not is_blacklisted(key) and ( not research_only or  is_entity_researched(player, proto)) then
                     table.insert(items, key)
                 end
             end
@@ -210,7 +224,7 @@ function show_pole_picker(player)
 
         for _, item in pairs(metaRep.ingredients) do   
             local iname = item["name"]
-            if not research_only or is_entity_researched(player, game.entity_prototypes[iname]) then
+            if not is_blacklisted(iname) and (not research_only or is_entity_researched(player, game.entity_prototypes[iname])) then
                 table.insert(items, iname)
             end
         end
