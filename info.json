@@ -1,0 +1,13 @@
+ {
+     "name": "Miner_Planner",
+     "version": "0.9.0",
+     "title": "Automatic miner planner",
+     "author": "Tom Allard",
+         "contact": "tom.allard@gmail.com",
+     "dependencies": [
+         "base"        
+     ],
+     "description": "Automatically plans all miners for a resource",
+     "factorio_version": "0.14",
+     "homepage": ""
+ }
