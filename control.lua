@@ -1,4 +1,5 @@
 buttons = {}
+mode_buttons = {}
 entity_selections = {
     belt = "transport-belt",
     miner = "electric-mining-drill",
@@ -13,6 +14,7 @@ deconstruction = true
 research_only = false
 ghosts = true
 active_direction = "left"
+spacing_mode = "tight"
 
 function remote_on_player_selected_area(event, alt)
 	if (event.item == "remote-control") then
@@ -236,6 +238,34 @@ function remote_show_gui(player)
             state = deconstruction ,
             name="deconstruction_button"
         }
+        local mode_picker = remote_selected_units.add {
+            type="flow",
+            direction="horizontal",
+            name="mode_picker"
+        }
+        mode_picker.add { 
+            type = "label",
+            caption = "Positioning"
+        }
+
+        local tight = mode_picker.add {
+            type = "radiobutton",
+            name = "mode_tight",          
+            caption = "Tight",
+            state = spacing_mode == "tight"  
+        }
+
+        local optimal = mode_picker.add {
+            type = "radiobutton",
+            name = "mode_optimal",          
+            caption = "Spread out",
+            state = spacing_mode == "optimal"  
+        }
+
+        mode_buttons = {}
+        table.insert(mode_buttons, tight)
+        table.insert(mode_buttons, optimal)
+
         local direction_picker = remote_selected_units.add {
             type="flow",
             direction="horizontal",
@@ -378,8 +408,20 @@ function create_miners(direction, area, type, player)
     local line_space = 0    
     local bbox = game.entity_prototypes[drill_type].selection_box
     local size = math.ceil(bbox.right_bottom.x - bbox.left_top.x)
-    local item_run = size + line_space
-    local column_run = size + 1
+    local item_run = 1
+    local column_run =  1+size
+    if spacing_mode == "tight" then
+        item_run = size + line_space
+        --column_run = 1 + size
+    end
+    if spacing_mode == "optimal" then
+        item_run = game.entity_prototypes[drill_type].mining_drill_radius * 2
+        -- if item_run > column_run then
+        --     column_run =  item_run 
+        -- end
+        
+    end
+
     local metaRep = player.force.recipes["mp-meta"]
     local pole_spacing = 1
     for _, item in pairs(metaRep.ingredients) do   
@@ -442,6 +484,8 @@ function create_miners(direction, area, type, player)
 
 end
 
+
+
 function remote_on_gui_click(event)
 	local player_index = event.player_index
     local ui = game.players[player_index].gui.left.remote_selected_units
@@ -449,6 +493,14 @@ function remote_on_gui_click(event)
 		
         
         local player = game.players[player_index]
+
+        if event.element.parent.name == "mode_picker" then
+            active_mode = event.element.name
+            for n,item in pairs(mode_buttons) do                
+                item.state = item == event.element
+            end
+            spacing_mode = string.gsub(event.element.name, "mode_", "")
+        end
         if event.element.name == "deconstruction_button" then
             deconstruction = not deconstruction
             ui.deconstruction_button.state = deconstruction
