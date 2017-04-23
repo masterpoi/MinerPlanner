@@ -9,6 +9,7 @@ new_selections = {
     miner = "electric-mining-drill",
     pole = "small-electric-pole"
 }
+deconstruction = true
 research_only = false
 ghosts = true
 active_direction = "left"
@@ -229,6 +230,12 @@ function remote_show_gui(player)
 	if player.gui.left.remote_selected_units == nil then
 		
 		local remote_selected_units = player.gui.left.add{type = "frame", name = "remote_selected_units", caption = {"text-remote-selected-units"}, direction = "vertical"}
+        remote_selected_units.add {
+            type = "checkbox",
+            caption = "Deconstruct selection",
+            state = deconstruction ,
+            name="deconstruction_button"
+        }
         local direction_picker = remote_selected_units.add {
             type="flow",
             direction="horizontal",
@@ -356,7 +363,9 @@ function create_miners(direction, area, type, player)
 
 
     local nauvis = game.surfaces.nauvis
-    nauvis.deconstruct_area { area = area, force = player.force}
+    if deconstruction then
+        nauvis.deconstruct_area { area = area, force = player.force}
+    end
     local drill_type = entity_selections.miner
     local belt_type = entity_selections.belt
     local pole_type = entity_selections.pole
@@ -435,11 +444,15 @@ end
 
 function remote_on_gui_click(event)
 	local player_index = event.player_index
-	if game.players[player_index].gui.left.remote_selected_units ~= nil then -- avoid looping if menu is closed
+    local ui = game.players[player_index].gui.left.remote_selected_units
+	if ui ~= nil then -- avoid looping if menu is closed
 		
         
         local player = game.players[player_index]
-
+        if event.element.name == "deconstruction_button" then
+            deconstruction = not deconstruction
+            ui.deconstruction_button.state = deconstruction
+        end
         if event.element.name == "change_belt_button" then
             hide_picker_guis(player)
             show_belt_picker(player)
