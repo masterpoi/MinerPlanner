@@ -1,4 +1,4 @@
-black_list = { "extractor", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water"}
+black_list = { "extractor", "underground", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water"}
 buttons = {}
 mode_buttons = {}
 entity_selections = {
@@ -177,7 +177,7 @@ end
 function show_belt_picker(player)
         local items = {}
         for key, proto in pairs(game.entity_prototypes)  do
-            if proto.belt_speed and not proto.underground_belt_distance  then
+            if proto.belt_speed then
                 if not is_blacklisted(key) and (not research_only or is_entity_researched(player, proto)) then
                     table.insert(items, key)
                 end

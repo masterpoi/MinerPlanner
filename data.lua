@@ -26,7 +26,7 @@ function copyPrototype(type, name, newName, change_results)
   return p
 end
 
-local metarecipe = copyPrototype("recipe", "deconstruction-planner", "mp-meta")
+local metarecipe = copyPrototype("recipe", "science-pack-1", "mp-meta")
 metarecipe.ingredients = {}
 metarecipe.enabled = false
 metarecipe.hidden = true
