@@ -3,7 +3,7 @@ data:extend({
 		type = "recipe",
 		name = "remote-control",
 		category = "crafting",
-		enabled = true,
+		enabled = false,
 		energy_required = 2,
 		ingredients =
 		{
@@ -29,6 +29,30 @@ data:extend({
 		alt_selection_mode = {"tiles", "matches-force"},
 		selection_cursor_box_type = "not-allowed",
 		alt_selection_cursor_box_type = "not-allowed"
+	},
+	{
+		  type = "technology",
+      name = "miner-planner-tech", 
+      icon = "__Miner_Planner__/graphics/icons/electric-mining-drill.png",
+      effects =
+      {
+        {
+            type = "unlock-recipe",
+            recipe = "remote-control"
+        },
+      },
+      prerequisites = {"construction-robotics"},
+      unit =
+      {
+        count = 100,
+        ingredients =
+        {
+          {"science-pack-1", 2},
+          {"science-pack-2", 2},
+					{"science-pack-3", 1},
+        },
+        time = 10
+      }
 	}
 
 })
