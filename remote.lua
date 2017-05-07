@@ -5,6 +5,7 @@ data:extend({
 		category = "crafting",
 		enabled = false,
 		energy_required = 2,
+		
 		ingredients =
 		{
 		  {type="item", name="electronic-circuit", amount=5}
@@ -18,6 +19,7 @@ data:extend({
 		type = "selection-tool",
 		name = "remote-control",
 		icon = "__Miner_Planner__/graphics/icons/electric-mining-drill.png",
+		icon_size = 32,
 		flags = {"goes-to-quickbar"},
 		subgroup = "tool",
 		order = "c[automated-construction]-e[remote-control]",
@@ -33,7 +35,8 @@ data:extend({
 	{
 		  type = "technology",
       name = "miner-planner-tech", 
-      icon = "__Miner_Planner__/graphics/icons/electric-mining-drill.png",
+      icon = "__Miner_Planner__/graphics/technology/mining-productivity.png",
+			icon_size = 128,
       effects =
       {
         {
