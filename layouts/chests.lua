@@ -53,25 +53,43 @@ function layout_chests(player, direction, drill_type, belt_type, pole_type, reso
     
 
     if (direction == "left" or direction == "right") then -- horizontal
+        local prevlinechest = nil
+        local chest
         for y = area[1][2] + 1 + nudge, area[2][2] + nudge, column_run do
-            
+            local prevchest = nil
             for x = area[1][1] + 1 + nudge ,area[2][1] + nudge, item_run do
                 local position = { x, y }
                 create_entity(drill_type, resource_type, position, bottom, bbox, player)                
                 position = { x, y + size +1 }
                 create_entity(drill_type, resource_type, position, top, bbox, player)                
                 position = { x  , y + 2 }                    
-                create_entity(chest_type, resource_type, position, nil , bbox, player)
+                chest = create_entity(chest_type, resource_type, position, nil , bbox, player)
+                if chest and prevchest then
+                    chest.connect_neighbour({
+                        target_entity= prevchest,
+                        wire= defines.wire_type.red
+                    })
+                end
+                prevchest = chest
             end    
             for x = area[1][1] + 1 + nudge, area[2][1] + nudge, pole_spacing do  
                     local position = { x + 1, y + 2 }
                     create_entity(pole_type, resource_type, position, nil, bbox, player)
                     
                    
-            end            
+            end    
+            if chest and prevlinechest then
+                    chest.connect_neighbour({
+                        target_entity= prevlinechest,
+                        wire= defines.wire_type.red
+                    })
+            end        
+            prevlinechest = chest
         end
     else  -- vertical
-        flip = false
+        local prevlinechest = nil
+        local chest
+
         for x = area[1][1] + 1 + nudge, area[2][1] + nudge, column_run do
             for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, item_run do
                 local position = { x, y }
@@ -79,14 +97,26 @@ function layout_chests(player, direction, drill_type, belt_type, pole_type, reso
                 position = { x + size +1 , y}
                 create_entity(drill_type, resource_type, position, left, bbox, player)    
                 position = { x + 2  , y }                    
-                create_entity(chest_type, resource_type, position, nil , bbox, player)
+                chest = create_entity(chest_type, resource_type, position, nil , bbox, player)
+                if chest and prevchest then
+                    chest.connect_neighbour({
+                        target_entity= prevchest,
+                        wire= defines.wire_type.red
+                    })
+                end
+                prevchest = chest
             end
             for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, pole_spacing do
                     local position = { x + 2, y + 1 }
                     create_entity(pole_type, resource_type, position, nil, bbox, player)
-                    
-                
             end
+            if chest and prevlinechest then
+                    chest.connect_neighbour({
+                        target_entity= prevlinechest,
+                        wire= defines.wire_type.red
+                    })
+            end        
+            prevlinechest = chest
         end
     end
 end

@@ -485,7 +485,7 @@ function resource_in_area(surface, position, entity_bounds, type)
     return #result > 0
 end
 function create_entity(entity_type, resource_type, position, direction, bbox, player)
-    create_entity(entity_type, resource_type, position, direction, bbox, player, nil)
+    return create_entity(entity_type, resource_type, position, direction, bbox, player, nil)
 end
 function create_entity(entity_type, resource_type, position, direction, bbox, player, type)
     if entity_type == "none" then return end
@@ -500,7 +500,7 @@ function create_entity(entity_type, resource_type, position, direction, bbox, pl
     --     game.print ("cannot place " .. entity_type .." at " .. position[1] .. "x" .. position[2])
     -- end -- and surface.can_place_entity (entity)
     if resource_in_area(surface, position, bbox, resource_type)  then                
-        surface.create_entity (entity)
+        return surface.create_entity (entity)
     end
 end
 function create_miners(direction, area, type, player)
