@@ -339,22 +339,27 @@ function remote_show_gui(player)
 					type = "flow",
 					name = "flow", 
 					direction = "horizontal"}
+            local icon_name = resource_name
+            local infinite = false
+            if (string.find( resource_name, "infinite")) then
+                icon_name = string.gsub(resource_name, "infinite." , "")
+                infinite = true
+            end 
+              
             unit_button_flow.add{
 			        type = "sprite",					
-					sprite = "item/".. resource_name}
-            -- unit_button_flow.add{
-			-- 		type = "label",
-			-- 		name = "resource-name", 
-			-- 		caption=resource_name,
-			-- 		style="unit-button-label"
-			-- 		}
-             unit_button_flow.add{
-					type = "label",
-					name = "resource-amount", 
-					caption=amount,
-					style="button-label"
-					}
+					sprite = "item/".. icon_name}
+
+            if infinite then
+                amount = "infinite"
+            end
        
+            unit_button_flow.add {
+                        type = "label",
+                        name = "resource-amount", 
+                        caption=amount,
+                        style="button-label"
+                }
 
 
         end
@@ -364,8 +369,8 @@ end
 function resource_in_area(surface, position, entity_bounds, type)
     local result = surface.find_entities_filtered {
         area = {
-            { position[1] + entity_bounds.left_top.x , position[2]  +entity_bounds.left_top.y },
-            { position[1] + entity_bounds.right_bottom.x , position[2]  +entity_bounds.right_bottom.y },
+            { position[1] + entity_bounds.left_top.x , position[2]  + entity_bounds.left_top.y },
+            { position[1] + entity_bounds.right_bottom.x , position[2] + entity_bounds.right_bottom.y },
         },
         name = type
     }
@@ -374,24 +379,24 @@ function resource_in_area(surface, position, entity_bounds, type)
 end
 
 function create_entity(entity_type, resource_type, position, direction, bbox, player)
-    local nauvis = game.surfaces.nauvis
+    local surface = game.surfaces.nauvis
     local entity 
     if ghosts then 
-        entity = {name="entity-ghost",inner_name=entity_type, position = position, direction=direction, force = player.force }
+        entity = { name = "entity-ghost", inner_name = entity_type, position = position, direction = direction, force = player.force }
     else 
-        entity = {name=entity_type, position = position, direction=direction, force = player.force }
+        entity = { name = entity_type, position = position, direction = direction, force = player.force }
     end
                     
-    if resource_in_area(nauvis, position, bbox, resource_type) and nauvis.can_place_entity (entity) then                
-        nauvis.create_entity (entity)
+    if resource_in_area(surface, position, bbox, resource_type) and surface.can_place_entity (entity) then                
+        surface.create_entity (entity)
     end
 end
 function create_miners(direction, area, type, player)
 
 
-    local nauvis = game.surfaces.nauvis
+    local surface = game.surfaces.nauvis
     if deconstruction then
-        nauvis.deconstruct_area { area = area, force = player.force}
+        surface.deconstruct_area { area = area, force = player.force}
     end
     local drill_type = entity_selections.miner
     local belt_type = entity_selections.belt
@@ -408,15 +413,11 @@ function create_miners(direction, area, type, player)
     local item_run = 1
     local column_run =  1+size
     if spacing_mode == "tight" then
-        item_run = size + line_space
-        --column_run = 1 + size
+        item_run = size + line_space        
     end
+
     if spacing_mode == "optimal" then
         item_run = game.entity_prototypes[drill_type].mining_drill_radius * 2
-        -- if item_run > column_run then
-        --     column_run =  item_run 
-        -- end
-        
     end
 
     local metaRep = player.force.recipes["mp-meta"]
@@ -424,7 +425,7 @@ function create_miners(direction, area, type, player)
     for _, item in pairs(metaRep.ingredients) do   
             local iname = item["name"]
             if iname == pole_type then
-                pole_spacing = math.ceil( item["amount"]  * 2 / 10 )
+                pole_spacing = math.ceil(item["amount"]  * 2 / 10)
             end
     end
     if direction == "left" then belt_dir=left end
@@ -443,13 +444,12 @@ function create_miners(direction, area, type, player)
             end     
             if not flip then 
                 for x = area[1][1] + 1 + nudge ,area[2][1] + nudge, 1 do  
-                    local position = {x, y + 2}
-                    create_entity(belt_type, type, position, belt_dir, bbox, player)
-             
+                    local position = { x, y + 2}
+                    create_entity(belt_type, type, position, belt_dir, bbox, player)             
                 end
             else 
                 for x = area[1][1] + 1 + nudge ,area[2][1] + nudge, pole_spacing do  
-                    local position = {x, y + 2}
+                    local position = { x, y + 2}
                     create_entity(pole_type, type, position, nil, bbox, player)
                 end
             end
@@ -459,19 +459,19 @@ function create_miners(direction, area, type, player)
         flip = false
         for x = area[1][1] + 1 + nudge, area[2][1] + nudge, column_run do
             for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, item_run do
-                local position = {x, y}
+                local position = { x, y }
                 local dir = right
                 if flip then dir = left end
                 create_entity(drill_type, type, position, dir, bbox, player)
             end     
             if not flip then 
-                for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, 1 do  
-                    local position = {x + 2, y }                    
+                for y = area[1][2] + 1 + nudge, area[2][2] + nudge, 1 do  
+                    local position = { x + 2, y }                    
                     create_entity(belt_type, type, position, belt_dir, bbox, player)
                 end
             else 
                 for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, pole_spacing do  
-                    local position = {x + 2, y }                    
+                    local position = { x + 2, y }                    
                     create_entity(pole_type, type, position, nil, bbox, player)
                 end
             end
@@ -487,7 +487,6 @@ function remote_on_gui_click(event)
 	local player_index = event.player_index
     local ui = game.players[player_index].gui.left.remote_selected_units
 	if ui ~= nil then -- avoid looping if menu is closed
-		
         
         local player = game.players[player_index]
 
@@ -543,7 +542,7 @@ function remote_on_gui_click(event)
 		if event.element.parent.name == "remote_selected_units" then
             local item_type = event.element.name
             
-			if (event.element.type == "button") then             
+			if (event.element.type == "button") then                             
                 create_miners( active_direction, global.player_selected_units[player.index][item_type].area, item_type, player)   
             end
 		end
