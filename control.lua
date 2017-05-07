@@ -147,7 +147,7 @@ function show_picker(key, player, items)
             type= "sprite-button",
             style = "square-button",
             name = "selected_" .. key,
-            sprite = "item/" .. entity_selections[key]
+            sprite = get_icon( entity_selections[key])
         }
         local pick = selection_flow.add {
             type = "button",
@@ -158,15 +158,24 @@ function show_picker(key, player, items)
         
         local grid = vflow.add {
             type="table",
-            colspan = #items,
+            colspan = #items + 1,
             name= key .. "-table"
         }
+
+        grid.add {
+                type= "sprite-button",
+                style= "square-button",
+                name =  key .. "type_none"  ,
+                sprite = get_icon("none"),
+                tooltip = "do not place"
+            }
+
         for i = 1, #items do
             grid.add {
                 type= "sprite-button",
                 style= "square-button",
                 name =  key .. "type_" .. items[i],
-                sprite = "item/" .. items[i],
+                sprite = get_icon(items[i]),
                 tooltip = items[i]
             }
             
@@ -240,16 +249,20 @@ function show_pole_picker(player)
         end
         show_picker("pole", player, items)
 end
+function get_icon(key) 
+    if key == "none" then return "virtual-signal/signal-red" end
+    return "item/" .. key
+end
 function update_selections(player) 
     local ui = player.gui.left.remote_selected_units
     if ui  then 
-        ui.entity_type_picker.change_belt_button.sprite = "item/" .. entity_selections.belt
+        ui.entity_type_picker.change_belt_button.sprite = get_icon ( entity_selections.belt )
         ui.entity_type_picker.change_belt_button.tooltip = entity_selections.belt
-        ui.entity_type_picker.change_pole_button.sprite = "item/" .. entity_selections.pole
+        ui.entity_type_picker.change_pole_button.sprite = get_icon ( entity_selections.pole )
         ui.entity_type_picker.change_pole_button.tooltip = entity_selections.pole
-        ui.entity_type_picker.change_miner_button.sprite = "item/" .. entity_selections.miner
+        ui.entity_type_picker.change_miner_button.sprite = get_icon ( entity_selections.miner )
         ui.entity_type_picker.change_miner_button.tooltip = entity_selections.miner
-        ui.entity_type_picker.change_chest_button.sprite = "item/" .. entity_selections.chest
+        ui.entity_type_picker.change_chest_button.sprite = get_icon ( entity_selections.chest )
         ui.entity_type_picker.change_chest_button.tooltip = entity_selections.chest
     end
 end
@@ -475,6 +488,7 @@ function create_entity(entity_type, resource_type, position, direction, bbox, pl
     create_entity(entity_type, resource_type, position, direction, bbox, player, nil)
 end
 function create_entity(entity_type, resource_type, position, direction, bbox, player, type)
+    if entity_type == "none" then return end
     local surface = player.surface
     local entity 
     if ghosts then 
@@ -563,7 +577,7 @@ function remote_on_gui_click(event)
             if  string.match( event.element.name, type .. "type_") then
                 local selection =  player.gui.center[type .. "_picker"].container.selection
                 new_selections[type] = string.gsub(event.element.name, type .. "type_" ,"")
-                selection["selected_" .. type].sprite = "item/" .. new_selections[type]
+                selection["selected_" .. type].sprite = get_icon(new_selections[type])
             end
 
             if event.element.name == "pick_" .. type .. "_button" then
