@@ -28,6 +28,8 @@ layout_strategy = "default"
 function remote_on_player_selected_area(event, alt)
 	if (event.item == "remote-control") then
     	local player = game.players[event.player_index]
+        
+        
         -- select
 	    remote_deselect_units(player)
 	    local area = event.area
@@ -43,7 +45,7 @@ function remote_on_player_selected_area(event, alt)
 		}
 		local data = {}
         global.player_selected_units[player.index] = data
-        
+        data["all"] = { amount = 0, entities = {}}
         
 		local item_found = false
         for _, entity in pairs(select_entities) do
@@ -53,7 +55,9 @@ function remote_on_player_selected_area(event, alt)
                     data[entity.name] = {amount = 0, entities={}}
                 end
                 data[entity.name].amount = data[entity.name].amount  + entity.amount
+                data["all"].amount = data["all"].amount + entity.amount
                 table.insert(data[entity.name].entities,entity)
+                table.insert(data["all"].entities, entity)
             end
 	    
 		end
@@ -64,11 +68,12 @@ function remote_on_player_selected_area(event, alt)
             itemdata.area = boudingbox
             
             for _, entity in pairs(itemdata.entities) do                 
-                extend_bounding_box(entity.position, boudingbox)
+                extend_bounding_box(entity.position, boudingbox)                
             end
 
         end
 
+        
         
 
 		if item_found then
@@ -416,11 +421,17 @@ function remote_show_gui(player)
                 icon_name = string.gsub(resource_name, "infinite." , "")
                 infinite = true
             end 
-              
-            unit_button_flow.add{
-			        type = "sprite",					
-					sprite = "item/".. icon_name}
-
+            if icon_name == "all" then
+                unit_button_flow.add {
+                        type = "label",                        
+                        caption="all",
+                        style="button-label"
+                }
+            else 
+                unit_button_flow.add{
+                        type = "sprite",					
+                        sprite = "item/".. icon_name}
+            end
             if infinite then
                 amount = "infinite"
             end
@@ -439,6 +450,17 @@ function remote_show_gui(player)
 end
 function resource_in_area(surface, position, entity_bounds, type)
     
+    if type == "all" then
+        local result = surface.find_entities_filtered {
+            area = {
+                { position[1] + entity_bounds.left_top.x , position[2]  + entity_bounds.left_top.y },
+                { position[1] + entity_bounds.right_bottom.x , position[2] + entity_bounds.right_bottom.y },
+            },
+            type = "resource"
+        }
+        
+        return #result > 0
+    end
     local result = surface.find_entities_filtered {
         area = {
             { position[1] + entity_bounds.left_top.x , position[2]  + entity_bounds.left_top.y },
