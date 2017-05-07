@@ -1,21 +1,29 @@
-black_list = { "extractor", "underground", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water"}
+require("layouts/default")
+require("layouts/interleaved")
+require("layouts/chests")
+
+black_list = { "extractor", "underground", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water", "factory.connection", "dummy"}
 buttons = {}
 mode_buttons = {}
+layout_buttons = {}
 entity_selections = {
     belt = "transport-belt",
     miner = "electric-mining-drill",
-    pole = "small-electric-pole"
+    pole = "small-electric-pole",
+    chest = "iron-chest"
 }
 new_selections = {
     belt = "transport-belt",
     miner = "electric-mining-drill",
-    pole = "small-electric-pole"
+    pole = "small-electric-pole",
+    chest = "iron-chest"
 }
 deconstruction = true
 research_only = false
 ghosts = true
 active_direction = "left"
 spacing_mode = "tight"
+layout_strategy = "default"
 
 function remote_on_player_selected_area(event, alt)
 	if (event.item == "remote-control") then
@@ -54,7 +62,7 @@ function remote_on_player_selected_area(event, alt)
             
             local boudingbox =   {{2000000,2000000},{-2000000,-2000000}} -- lefttop, rightbottom
             itemdata.area = boudingbox
-            game.print(name)
+            
             for _, entity in pairs(itemdata.entities) do                 
                 extend_bounding_box(entity.position, boudingbox)
             end
@@ -201,6 +209,20 @@ function show_miner_picker(player)
         show_picker("miner", player, items)
 end
 
+function show_chest_picker(player)
+        local items = {}
+        for key, proto in pairs(game.entity_prototypes)  do
+            if  string.match(key, "chest")  then
+       
+                if not is_blacklisted(key) and ( not research_only or  is_entity_researched(player, proto)) then
+                    table.insert(items, key)
+                end
+            end
+        end
+
+        show_picker("chest", player, items)
+end
+
 function show_pole_picker(player)
         local items = {}
         local metaRep = player.force.recipes["mp-meta"]
@@ -222,6 +244,8 @@ function update_selections(player)
         ui.entity_type_picker.change_pole_button.tooltip = entity_selections.pole
         ui.entity_type_picker.change_miner_button.sprite = "item/" .. entity_selections.miner
         ui.entity_type_picker.change_miner_button.tooltip = entity_selections.miner
+        ui.entity_type_picker.change_chest_button.sprite = "item/" .. entity_selections.chest
+        ui.entity_type_picker.change_chest_button.tooltip = entity_selections.chest
     end
 end
 
@@ -262,6 +286,46 @@ function remote_show_gui(player)
         mode_buttons = {}
         table.insert(mode_buttons, tight)
         table.insert(mode_buttons, optimal)
+
+        local layout_picker = remote_selected_units.add {
+            type="flow",
+            direction="horizontal",
+            name="layout_picker"
+        }
+        layout_picker.add { 
+            type = "label",
+            caption = "Layout"
+        }
+
+        local default = layout_picker.add {
+            type = "radiobutton",
+            name = "layout_default",          
+            caption = "Default",
+            state = layout_strategy == "default"
+        }
+
+        local interleaved = layout_picker.add {
+            type = "radiobutton",
+            name = "layout_interleaved",          
+            caption = "Interleaved",
+            state = layout_strategy == "interleaved"
+        }
+
+
+        local chests = layout_picker.add {
+            type = "radiobutton",
+            name = "layout_chests",          
+            caption = "Chests",
+            state = layout_strategy == "chests"
+        }
+
+
+        
+
+        layout_buttons = {}
+        table.insert(layout_buttons, interleaved)
+        table.insert(layout_buttons, default)
+        table.insert(layout_buttons, chests)
 
         local direction_picker = remote_selected_units.add {
             type="flow",
@@ -326,6 +390,13 @@ function remote_show_gui(player)
          
         }
 
+        local pick = entity_type_picker.add {
+            type = "sprite-button",            
+            name = "change_chest_button",
+            style = "square-button"
+         
+        }
+
         update_selections(player)
 
 
@@ -367,6 +438,7 @@ function remote_show_gui(player)
     end
 end
 function resource_in_area(surface, position, entity_bounds, type)
+    
     local result = surface.find_entities_filtered {
         area = {
             { position[1] + entity_bounds.left_top.x , position[2]  + entity_bounds.left_top.y },
@@ -377,109 +449,46 @@ function resource_in_area(surface, position, entity_bounds, type)
 
     return #result > 0
 end
-
 function create_entity(entity_type, resource_type, position, direction, bbox, player)
-    local surface = game.surfaces.nauvis
+    create_entity(entity_type, resource_type, position, direction, bbox, player, nil)
+end
+function create_entity(entity_type, resource_type, position, direction, bbox, player, type)
+    local surface = player.surface
     local entity 
     if ghosts then 
-        entity = { name = "entity-ghost", inner_name = entity_type, position = position, direction = direction, force = player.force }
+        entity = { name = "entity-ghost", inner_name = entity_type, expires = false, position = position, direction = direction, force = player.force, type = type }
     else 
-        entity = { name = entity_type, position = position, direction = direction, force = player.force }
+        entity = { name = entity_type, position = position, direction = direction, force = player.force , type = type}
     end
-                    
-    if resource_in_area(surface, position, bbox, resource_type) and surface.can_place_entity (entity) then                
+    -- if not surface.can_place_entity(entity) then
+    --     game.print ("cannot place " .. entity_type .." at " .. position[1] .. "x" .. position[2])
+    -- end -- and surface.can_place_entity (entity)
+    if resource_in_area(surface, position, bbox, resource_type)  then                
         surface.create_entity (entity)
     end
 end
 function create_miners(direction, area, type, player)
 
-
-    local surface = game.surfaces.nauvis
+    local surface = player.surface
     if deconstruction then
         surface.deconstruct_area { area = area, force = player.force}
     end
     local drill_type = entity_selections.miner
     local belt_type = entity_selections.belt
-    local pole_type = entity_selections.pole
-    local right = 3
-    local top = 1
-    local bottom = 5
-    local left = 7
-    local belt_dir="top"
-    local nudge = 0.5
-    local line_space = 0    
-    local bbox = game.entity_prototypes[drill_type].selection_box
-    local size = math.ceil(bbox.right_bottom.x - bbox.left_top.x)
-    local item_run = 1
-    local column_run =  1+size
-    if spacing_mode == "tight" then
-        item_run = size + line_space        
-    end
+    local pole_type = entity_selections.pole   
+    local chest_type = entity_selections.chest   
 
-    if spacing_mode == "optimal" then
-        item_run = game.entity_prototypes[drill_type].mining_drill_radius * 2
+    if (layout_strategy == "default") then
+        layout_default(player, direction, drill_type, belt_type, pole_type, type, area)
     end
-
-    local metaRep = player.force.recipes["mp-meta"]
-    local pole_spacing = 1
-    for _, item in pairs(metaRep.ingredients) do   
-            local iname = item["name"]
-            if iname == pole_type then
-                pole_spacing = math.ceil(item["amount"]  * 2 / 10)
-            end
+    if (layout_strategy == "interleaved") then
+        layout_interleaved(player, direction, drill_type, belt_type, pole_type, type, area)
     end
-    if direction == "left" then belt_dir=left end
-    if direction == "right" then belt_dir=right end
-    if direction == "top" then belt_dir=top end
-    if direction == "bottom" then belt_dir=bottom end
-
-    local flip = false
-    if (direction == "left" or direction == "right") then -- horizontal
-        for y = area[1][2] + 1 + nudge, area[2][2] + nudge, column_run do
-            for x = area[1][1] + 1 + nudge ,area[2][1] + nudge, item_run do
-                local position = {x, y}
-                local dir = bottom
-                if flip then dir = top end
-                create_entity(drill_type, type, position, dir, bbox, player)                
-            end     
-            if not flip then 
-                for x = area[1][1] + 1 + nudge ,area[2][1] + nudge, 1 do  
-                    local position = { x, y + 2}
-                    create_entity(belt_type, type, position, belt_dir, bbox, player)             
-                end
-            else 
-                for x = area[1][1] + 1 + nudge ,area[2][1] + nudge, pole_spacing do  
-                    local position = { x, y + 2}
-                    create_entity(pole_type, type, position, nil, bbox, player)
-                end
-            end
-            flip = not flip
-        end
-    else  -- vertical
-        flip = false
-        for x = area[1][1] + 1 + nudge, area[2][1] + nudge, column_run do
-            for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, item_run do
-                local position = { x, y }
-                local dir = right
-                if flip then dir = left end
-                create_entity(drill_type, type, position, dir, bbox, player)
-            end     
-            if not flip then 
-                for y = area[1][2] + 1 + nudge, area[2][2] + nudge, 1 do  
-                    local position = { x + 2, y }                    
-                    create_entity(belt_type, type, position, belt_dir, bbox, player)
-                end
-            else 
-                for y = area[1][2] + 1 + nudge ,area[2][2] + nudge, pole_spacing do  
-                    local position = { x + 2, y }                    
-                    create_entity(pole_type, type, position, nil, bbox, player)
-                end
-            end
-            flip = not flip
-        end
+    if (layout_strategy == "chests") then
+        layout_chests(player, direction, drill_type, belt_type, pole_type, type, chest_type, area)
     end
-
 end
+
 
 
 
@@ -497,6 +506,13 @@ function remote_on_gui_click(event)
             end
             spacing_mode = string.gsub(event.element.name, "mode_", "")
         end
+        if event.element.parent.name == "layout_picker" then
+            active_mode = event.element.name
+            for n,item in pairs(layout_buttons) do                
+                item.state = item == event.element
+            end
+            layout_strategy = string.gsub(event.element.name, "layout_", "")
+        end
         if event.element.name == "deconstruction_button" then
             deconstruction = not deconstruction
             ui.deconstruction_button.state = deconstruction
@@ -513,8 +529,12 @@ function remote_on_gui_click(event)
             hide_picker_guis(player)
             show_miner_picker(player)
         end
+          if event.element.name == "change_chest_button" then
+            hide_picker_guis(player)
+            show_chest_picker(player)
+        end
 
-        local types = { "belt", "pole", "miner"}
+        local types = { "belt", "pole", "miner", "chest"}
 
         for i = 1, #types do
             local type = types[i]
