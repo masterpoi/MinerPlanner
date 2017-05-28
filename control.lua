@@ -2,7 +2,7 @@ require("layouts/default")
 require("layouts/interleaved")
 require("layouts/chests")
 
-black_list = { "extractor", "underground", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water", "factory.connection", "dummy"}
+black_list = { "extractor", "underground", "factory.port.marker","vehicle.miner.*attachment", "splitter", "loader", "pumpjack", "water", "factory.connection", "dummy", "proxy"}
 buttons = {}
 mode_buttons = {}
 layout_buttons = {}
