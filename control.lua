@@ -158,7 +158,7 @@ function show_picker(key, player, items)
         
         local grid = vflow.add {
             type="table",
-            colspan = #items + 1,
+            column_count = #items + 1,
             name= key .. "-table"
         }
 
